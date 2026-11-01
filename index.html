@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabaPintar - Kalkulator HPP & Target Profit UMKM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-12">
+
+    <header class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-30">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-slate-950 font-bold">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-sm leading-tight">LABAPINTAR UMKM</h1>
+                    <p class="text-[10px] text-amber-400">Kalkulator HPP & Harga Jual Otomatis</p>
+                </div>
+            </div>
+            <button onclick="resetAll()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg text-slate-300">
+                <i class="fa-solid fa-rotate-right mr-1 text-amber-400"></i> Reset
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 mt-4 space-y-4">
+
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-3">
+            <h2 class="font-bold text-xs uppercase tracking-wider text-slate-400">1. Detail Produk & Target Produksi</h2>
+            <div class="grid grid-cols-3 gap-2">
+                <div class="col-span-2">
+                    <label class="text-[11px] font-semibold text-slate-600">Nama Produk / Menu</label>
+                    <input id="prodName" type="text" placeholder="Misal: Es Kopi Susu / Paket Servis" class="w-full mt-1 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-600">Hasil (Porsi/Pcs)</label>
+                    <input id="batchYield" type="number" value="1" min="1" oninput="calculate()" class="w-full mt-1 px-3 py-2 text-xs border border-slate-200 rounded-xl text-center font-bold focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-3">
+            <h2 class="font-bold text-xs uppercase tracking-wider text-slate-400">2. Rincian Biaya Modal (Bahan / Kemasan / Tenaga)</h2>
+            <div class="grid grid-cols-5 gap-2">
+                <input id="costName" type="text" placeholder="Nama bahan/biaya..." class="col-span-3 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500">
+                <input id="costAmount" type="number" placeholder="Rp..." class="col-span-2 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500">
+            </div>
+            <button onclick="addCost()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-plus text-amber-400"></i> Tambah Komponen Modal
+            </button>
+
+            <div id="costList" class="divide-y divide-slate-100 text-xs pt-2">
+                <p class="text-slate-400 text-center py-3 italic">Belum ada komponen modal</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="font-bold text-xs uppercase tracking-wider text-slate-400">3. Target Margin Keuntungan</h2>
+                <span id="marginLabel" class="bg-amber-100 text-amber-800 font-extrabold px-2.5 py-0.5 rounded-full text-xs">50%</span>
+            </div>
+            <input id="profitMargin" type="range" min="10" max="200" step="5" value="50" oninput="calculate()" class="w-full accent-amber-500 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-400 font-semibold">
+                <span>Tipis (10%)</span>
+                <span>Standar (50%)</span>
+                <span>Tinggi (100%+)</span>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 text-white p-5 rounded-2xl shadow-lg space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div>
+                    <p class="text-[11px] text-slate-400">Total Modal Keseluruhan</p>
+                    <p id="totalModalUI" class="font-bold text-sm text-slate-200">Rp 0</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[11px] text-slate-400">HPP Modal per Pcs/Porsi</p>
+                    <p id="hppPerUnitUI" class="font-extrabold text-base text-amber-400">Rp 0</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/90 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
+                <div>
+                    <p class="text-[11px] text-amber-400 font-bold uppercase tracking-wider">Rekomendasi Harga Jual</p>
+                    <p id="sellPriceUI" class="text-2xl font-extrabold text-white mt-0.5">Rp 0</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[11px] text-emerald-400 font-semibold">Untung Bersih / Pcs</p>
+                    <p id="netProfitUI" class="text-base font-extrabold text-emerald-400">+Rp 0</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-center pt-1">
+                <div class="bg-slate-800/50 p-2.5 rounded-xl border border-slate-800">
+                    <p class="text-[10px] text-slate-400">Jika Laku 10 Pcs/Hari</p>
+                    <p id="dailyProfitUI" class="font-extrabold text-xs text-emerald-400 mt-0.5">Untung Rp 0</p>
+                </div>
+                <div class="bg-slate-800/50 p-2.5 rounded-xl border border-slate-800">
+                    <p class="text-[10px] text-slate-400">Potensi Laba Sebulan (30 Hari)</p>
+                    <p id="monthlyProfitUI" class="font-extrabold text-xs text-amber-400 mt-0.5">Rp 0</p>
+                </div>
+            </div>
+
+            <button onclick="shareWA()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-md">
+                <i class="fa-brands fa-whatsapp text-base"></i>
+                <span>Simpan / Kirim Laporan HPP ke WhatsApp</span>
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        let costs = JSON.parse(localStorage.getItem('lp_costs')) || [];
+
+        function formatRp(num) {
+            return 'Rp ' + Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function addCost() {
+            const name = document.getElementById('costName').value.trim();
+            const amount = parseFloat(document.getElementById('costAmount').value);
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert('Isi nama bahan/biaya dan nominal harganya dulu!');
+                return;
+            }
+
+            costs.push({ name, amount });
+            localStorage.setItem('lp_costs', JSON.stringify(costs));
+            document.getElementById('costName').value = '';
+            document.getElementById('costAmount').value = '';
+            renderCosts();
+            calculate();
+        }
+
+        function removeCost(idx) {
+            costs.splice(idx, 1);
+            localStorage.setItem('lp_costs', JSON.stringify(costs));
+            renderCosts();
+            calculate();
+        }
+
+        function renderCosts() {
+            const list = document.getElementById('costList');
+            if (costs.length === 0) {
+                list.innerHTML = '<p class="text-slate-400 text-center py-3 italic">Belum ada komponen modal</p>';
+                return;
+            }
+
+            let html = '';
+            costs.forEach((c, i) => {
+                html += `
+                <div class="py-2 flex justify-between items-center">
+                    <span class="font-semibold text-slate-700">${c.name}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-slate-900">${formatRp(c.amount)}</span>
+                        <button onclick="removeCost(${i})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </div>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function calculate() {
+            const yieldQty = parseInt(document.getElementById('batchYield').value) || 1;
+            const margin = parseInt(document.getElementById('profitMargin').value) || 0;
+            document.getElementById('marginLabel').innerText = margin + '%';
+
+            const totalModal = costs.reduce((sum, item) => sum + item.amount, 0);
+            const hppUnit = totalModal / yieldQty;
+            const profitUnit = hppUnit * (margin / 100);
+            const sellPrice = hppUnit + profitUnit;
+
+            document.getElementById('totalModalUI').innerText = formatRp(totalModal);
+            document.getElementById('hppPerUnitUI').innerText = formatRp(hppUnit);
+            document.getElementById('sellPriceUI').innerText = formatRp(sellPrice);
+            document.getElementById('netProfitUI').innerText = '+' + formatRp(profitUnit);
+            document.getElementById('dailyProfitUI').innerText = 'Untung ' + formatRp(profitUnit * 10);
+            document.getElementById('monthlyProfitUI').innerText = formatRp(profitUnit * 10 * 30);
+        }
+
+        function resetAll() {
+            if (confirm('Hapus semua rincian biaya modal?')) {
+                costs = [];
+                localStorage.removeItem('lp_costs');
+                document.getElementById('prodName').value = '';
+                document.getElementById('batchYield').value = 1;
+                renderCosts();
+                calculate();
+            }
+        }
+
+        function shareWA() {
+            if (costs.length === 0) {
+                alert('Tambahkan rincian modal terlebih dahulu!');
+                return;
+            }
+            const prod = document.getElementById('prodName').value.trim() || 'Produk Baru';
+            const yieldQty = parseInt(document.getElementById('batchYield').value) || 1;
+            const margin = parseInt(document.getElementById('profitMargin').value) || 0;
+            const totalModal = costs.reduce((sum, item) => sum + item.amount, 0);
+            const hppUnit = totalModal / yieldQty;
+            const profitUnit = hppUnit * (margin / 100);
+            const sellPrice = hppUnit + profitUnit;
+
+            let text = `*LAPORAN HITUNGAN HPP & PROFIT*\n`;
+            text += `Produk : *${prod}*\n`;
+            text += `Hasil Produksi : ${yieldQty} Pcs/Porsi\n`;
+            text += `--------------------------------\n`;
+            costs.forEach(c => {
+                text += `• ${c.name} : ${formatRp(c.amount)}\n`;
+            });
+            text += `--------------------------------\n`;
+            text += `Total Modal : ${formatRp(totalModal)}\n`;
+            text += `*HPP per Pcs : ${formatRp(hppUnit)}*\n`;
+            text += `*Harga Jual (${margin}%) : ${formatRp(sellPrice)}*\n`;
+            text += `*Untung Bersih/Pcs : ${formatRp(profitUnit)}*\n`;
+            text += `--------------------------------\n`;
+            text += `_Estimasi Laba (10 pcs/hari) : ${formatRp(profitUnit * 300)} /bulan_`;
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        renderCosts();
+        calculate();
+    </script>
+</body>
+</html>
